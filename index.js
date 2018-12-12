@@ -28,6 +28,14 @@ const ACTION_DEC = {
     type: 'DECREMENT'
 };
 
+const ACTION_ADD = {
+    type: 'ADD_COUNTER'
+};
+
+const ACTION_DEL = {
+    type: 'DEL_COUNTER'
+};
+
 // "Action Creators"
 // when you need to configure an action, write a function
 const incrementCounter = id => {
@@ -44,7 +52,18 @@ const decrementCounter = id => {
         id
     };
 };
-// example: store.dispatch(decrementCounter('abc-123-do'))
+
+const addCounter = () => {
+    return {
+        ...ACTION_ADD
+    };
+};
+const delCounter = id => {
+    return {
+        ...ACTION_DEL,
+        id
+    };
+};
 
 // #3 - write a pure function that accepts the current state and an action,
 // then returns the new version state
@@ -67,7 +86,7 @@ const counterReducerFunc = (state = defaultState, action) => {
                             count: oneCounter.count + 1
                         };
                     } else {
-                        // these are not the droids i'm lookg for
+                        // these are not the droids i'm looking for
                         return oneCounter;
                     }
                 })
@@ -77,8 +96,40 @@ const counterReducerFunc = (state = defaultState, action) => {
         // aren't triggered
         case ACTION_DEC.type:
             // if it's 'DECREMENT', return a new state object with the count - 1
+            // return {
+            //     count: state.count - 1
+            // };
             return {
-                count: state.count - 1
+                counters: state.counters.map(oneCounter => {
+                    if (oneCounter.id === action.id) {
+                        return {
+                            ...oneCounter,
+                            count: oneCounter.count - 1
+                        };
+                    } else {
+                        return oneCounter;
+                    }
+                })
+            };
+        case ACTION_ADD.type:
+            // return all existing counters, but also a new one!
+            return {
+                counters: [
+                    ...state.counters,
+                    {
+                        id: uuid(),
+                        count: 0
+                    }
+                ]
+            };
+        case ACTION_DEL.type:
+            return {
+                // we want all the counters, except the one
+                // whose id matches action.id
+                counters: state.counters.filter(oneCounter => {
+                    const canGoIntoClub = oneCounter.id !== action.id;
+                    return canGoIntoClub;
+                })
             };
         default:
             // else return the state as-is
@@ -92,11 +143,25 @@ const store = createStore(counterReducerFunc);
 // You can subscribe to notifications of any changes to the state
 store.subscribe(() => {
     const theState = store.getState();
-    console.log(`The state is now: ${theState.count}`);
+    console.log(`The state is now: ${theState.counters}`);
 });
 
 module.exports = {
     store,
+    incrementCounter,
+    decrementCounter,
+    addCounter,
+    delCounter,
     ACTION_INC,
     ACTION_DEC
 };
+
+/* const {
+    store,
+    incrementCounter,
+    decrementCounter,
+    addCounter,
+    delCounter,
+    ACTION_INC,
+    ACTION_DEC
+ } = require('./index'); */
